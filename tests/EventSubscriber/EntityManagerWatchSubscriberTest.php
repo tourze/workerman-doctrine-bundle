@@ -3,6 +3,7 @@
 namespace Tourze\WorkermanDoctrineBundle\Tests\EventSubscriber;
 
 use Doctrine\ORM\EntityManagerInterface;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\ConsoleEvents;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
@@ -11,7 +12,7 @@ use Tourze\WorkermanDoctrineBundle\EventSubscriber\EntityManagerWatchSubscriber;
 
 class EntityManagerWatchSubscriberTest extends TestCase
 {
-    private EntityManagerInterface $entityManager;
+    private EntityManagerInterface&MockObject $entityManager;
     private EntityManagerWatchSubscriber $subscriber;
     
     protected function setUp(): void
