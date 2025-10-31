@@ -2,6 +2,7 @@
 
 namespace Tourze\WorkermanDoctrineBundle\EventSubscriber;
 
+use Doctrine\Bundle\DoctrineBundle\Registry;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\ConsoleEvents;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
@@ -11,9 +12,9 @@ use Workerman\Worker;
 /**
  * 因为 entityManager 会存在“发生异常就马上close这种问题”，为了简化我们的操作，我们在这里主动退出进程，减少问题被蔓延的可能
  */
-class EntityManagerWatchSubscriber
+readonly class EntityManagerWatchSubscriber
 {
-    public function __construct(private readonly EntityManagerInterface $entityManager)
+    public function __construct(private Registry $registry)
     {
     }
 
@@ -21,12 +22,19 @@ class EntityManagerWatchSubscriber
     #[AsEventListener(event: ConsoleEvents::TERMINATE, priority: -99999)]
     public function checkEntityManager(): void
     {
-        if ($this->entityManager->isOpen()) {
-            return;
-        }
+        foreach ($this->registry->getManagers() as $manager) {
+            // 确保我们处理的是 EntityManagerInterface，它有 isOpen() 方法
+            if (!$manager instanceof EntityManagerInterface) {
+                continue;
+            }
 
-        if (Worker::isRunning()) {
-            Worker::stopAll();
+            if ($manager->isOpen()) {
+                continue;
+            }
+
+            if (Worker::isRunning()) {
+                Worker::stopAll();
+            }
         }
     }
 }
